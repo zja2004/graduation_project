@@ -1,0 +1,141 @@
+# Genos 多智能体基因组分析系统 - 运行配置
+
+# ============ Genos API 配置 ============
+genos:
+  # 本地 Genos 服务地址
+  server_url: "http://172.16.227.27:8010"
+
+  # API Token (或从环境变量 GENOS_API_TOKEN 读取)
+  api_token: null  # 留空则从环境变量读取
+
+  # 模型配置
+  model_name: "10B"  # 使用远程部署的 10B 模型
+  pooling: "mean"  # mean/max/last/none
+  timeout: 60
+  mock_mode: false
+
+# ============ DeepSeek API 配置 ============
+deepseek:
+  api_key: "sk-68084dca40ca44eebfd9455a4f502a2a"
+  model: "deepseek-chat"
+  base_url: "https://api.deepseek.com"
+
+# ============ 参考数据配置 ============
+reference:
+  fasta: "data/reference/hg38.fa"  # 参考基因组
+  # fasta: "data/reference/hg19.fa"  # 或使用 hg19
+
+# ============ 知识库配置 ============
+knowledge:
+  clinvar: "data/knowledge/clinvar.tsv"
+  gnomad: "data/knowledge/gnomad_freq.tsv"
+  omim: "data/knowledge/omim.jsonl"
+  gene_info: "data/knowledge/gene_info.tsv"
+  papers_dir: "data/knowledge/papers/"
+
+# ============ 变异过滤参数 ============
+variant_filter:
+  min_quality: 30  # 最小质量分数
+  max_population_freq: 0.01  # 最大人群频率（1%）
+
+  # 保留的变异类型
+  consequence_types:
+    - "stop_gained"
+    - "frameshift_variant"
+    - "splice_acceptor_variant"
+    - "splice_donor_variant"
+    - "start_lost"
+    - "stop_lost"
+    - "missense_variant"
+    - "inframe_insertion"
+    - "inframe_deletion"
+
+  # 排除的区域
+  exclude_regions:
+    - "chrM"  # 线粒体
+
+# ============ 序列窗口配置 ============
+sequence_context:
+  window_size: 2000  # 单侧窗口（bp）
+  validate_ref: true  # 是否验证 ref 与参考基因组一致
+
+# ============ 变异效应评分 ============
+scoring:
+  method: "llm_deepseek"  # genos_embedding / traditional / hybrid / llm_deepseek
+
+  # Genos embedding 参数
+  genos_weights:
+    cosine_similarity: -0.5  # 相似度越低，影响越大（负权重）
+    euclidean_distance: 0.3
+    diff_magnitude: 0.2
+
+  # 阈值
+  thresholds:
+    high_impact: 0.7  # 高影响
+    moderate_impact: 0.4  # 中等影响
+    low_impact: 0.2  # 低影响
+
+# ============ 证据检索 (RAG) 配置 ============
+evidence_rag:
+  top_k: 5  # 返回前 K 个证据
+  min_similarity: 0.3  # 最小相似度阈值
+
+  # 证据来源权重
+  source_weights:
+    clinvar: 1.0
+    omim: 0.8
+    literature: 0.6
+    prediction: 0.4
+
+# ============ Critic 审校配置 ============
+critic:
+  # 一致性检查
+  consistency:
+    check_annotation: true  # 检查注释一致性
+    check_frequency: true  # 检查频率一致性
+    check_evidence: true  # 检查证据一致性
+
+  # 置信度阈值
+  confidence:
+    high: 0.8  # 高置信度
+    medium: 0.5  # 中等置信度
+
+# ============ 报告生成配置 ============
+report:
+  format: "html"  # markdown / html / pdf
+  include_sections:
+    - "summary"
+    - "top_variants"
+    - "evidence"
+    - "recommendations"
+
+  max_variants_in_report: 10  # 报告中最多包含的变异数
+
+# ============ 输出配置 ============
+output:
+  run_dir: "runs"  # 运行输出目录
+  save_intermediate: true  # 是否保存中间结果
+
+  # 保存的中间文件
+  artifacts:
+    - "plan.yaml"
+    - "variants.filtered.vcf"
+    - "annotation.tsv"
+    - "contexts.jsonl"
+    - "genos_embeddings.parquet"
+    - "scores.tsv"
+    - "evidence.json"
+    - "report.md"
+    - "critic_report.json"
+
+# ============ 并行与性能 ============
+performance:
+  max_workers: 4  # 最大并行数
+  batch_size: 10  # Genos 批处理大小
+  cache_embeddings: true  # 缓存 embeddings
+
+# ============ 日志配置 ============
+logging:
+  level: "INFO"  # DEBUG / INFO / WARNING / ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  save_to_file: true

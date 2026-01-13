@@ -1,0 +1,21 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=CSQ,Number=.,Type=String,Description="Consequence annotations">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE
+chr1	100001	rs1	A	G	50.0	PASS	AF=0.001;CSQ=missense_variant	GT:DP:GQ	0/1:30:50
+chr1	200002	rs2	C	T	60.0	PASS	AF=0.005;CSQ=missense_variant	GT:DP:GQ	0/1:35:60
+chr1	300003	rs3	G	A	45.0	PASS	AF=0.002;CSQ=synonymous_variant	GT:DP:GQ	0/1:28:45
+chr6	51484075	rs4	T	G	70.0	PASS	AF=0.0001;CSQ=missense_variant	GT:DP:GQ	0/1:40:70
+chr6	51484100	rs5	A	T	55.0	PASS	AF=0.003;CSQ=stop_gained	GT:DP:GQ	0/1:32:55
+chr7	117559590	rs6	C	G	65.0	PASS	AF=0.0005;CSQ=frameshift_variant	GT:DP:GQ	1/1:38:65
+chr7	117559600	rs7	G	C	48.0	PASS	AF=0.008;CSQ=missense_variant	GT:DP:GQ	0/1:29:48
+chr1	400004	rs8	TG	T	40.0	PASS	AF=0.006;CSQ=frameshift_variant	GT:DP:GQ	0/1:25:40
+chr1	500005	rs9	A	ACG	35.0	PASS	AF=0.004;CSQ=inframe_insertion	GT:DP:GQ	0/1:22:35
+chr6	51484200	rs10	ATCG	A	30.0	PASS	AF=0.007;CSQ=inframe_deletion	GT:DP:GQ	0/1:20:30
