@@ -1,0 +1,61 @@
+# ==========================================
+# Genos Pipeline - Server Configuration
+# ==========================================
+# 适用于高性能服务器环境的配置
+# 启用全本地知识库模式，最大化并发
+
+# ============ 1. 全局设置 ============
+pipeline:
+  name: "Genos-Agentic-Pipeline (Server)"
+  version: "1.0.0"
+  output_base_dir: "runs"
+
+# ============ 2. 外部 API 设置 ============
+api:
+  # Genos DCS API (必须设置)
+  genos:
+    base_url: "https://api.genos.com/v1"  # 示例地址
+    # export GENOS_API_TOKEN="your_token_here"
+    
+  # DeepSeek LLM API (用于报告生成和评分)
+  deepseek:
+    model: "deepseek-chat"
+    base_url: "https://api.deepseek.com/chat/completions"
+    temperature: 0.1
+    # export DEEPSEEK_API_KEY="your_key_here"
+
+# ============ 3. 参考数据与知识库 ============
+resources:
+  # 参考基因组 (服务器上建议使用 SSD 路径)
+  reference_genome: "data/reference/hg38.fa"
+  
+knowledge:
+  # 知识库模式: "local" (服务器推荐)
+  # 服务器拥有足够的存储空间，应下载完整数据库以获得最快速度
+  mode: "local" 
+  
+  # 本地数据库路径
+  clinvar_db: "data/knowledge/knowledge.db"
+  gnomad: "data/knowledge/gnomad_freq.tsv" # 或指向 raw/gnomad.genomes.vcf.bgz
+  omim: "data/knowledge/omim.jsonl"
+  
+  # 远程回退 (仅当本地数据损坏时使用)
+  remote_timeout: 10
+
+# ============ 4. 性能优化 (服务器级) ============
+performance:
+  # 批处理大小 (根据服务器显存调整)
+  batch_size: 64      # 本地默认 16
+  
+  # 线程数 (根据 CPU 核心数调整)
+  max_workers: 16     # 本地默认 4
+  
+  # 缓存设置
+  use_cache: true
+  cache_dir: ".cache"
+
+# ============ 5. 报告设置 ============
+report:
+  language: "zh-CN"
+  format: ["md", "html"]
+  include_plots: true

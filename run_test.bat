@@ -1,32 +1,29 @@
 @echo off
-echo ========================================
-echo Genos 多智能体系统 - 快速测试
-echo ========================================
+echo ============================================================
+echo Genos 多智能体基因组分析系统 - 测试运行
+echo ============================================================
 echo.
 
-REM 检查 Python
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo [错误] 未找到 Python，请先安装 Python 3.8+
-    pause
-    exit /b 1
+echo [1/3] 清理 Python 缓存...
+for /d /r . %%d in (__pycache__) do @if exist "%%d" rd /s /q "%%d"
+del /s /q *.pyc >nul 2>&1
+
+echo [2/3] 运行分析流程...
+python main.py --vcf examples\test.vcf --output runs\test --sample demo
+
+echo.
+echo [3/3] 检查输出文件...
+if exist runs\test\report.md (
+    echo ✓ 分析报告已生成: runs\test\report.md
+    echo.
+    echo 查看报告内容:
+    type runs\test\report.md
+) else (
+    echo ✗ 报告生成失败
 )
 
-echo [1/3] 检查依赖...
-python -c "import yaml, numpy, pandas, requests" 2>nul
-if errorlevel 1 (
-    echo [提示] 正在安装依赖...
-    pip install pyyaml numpy pandas requests pyarrow
-)
-
 echo.
-echo [2/3] 运行测试分析...
-python main.py --vcf examples\test.vcf --output runs\test_run --sample demo --log-level INFO
-
-echo.
-echo [3/3] 测试完成！
-echo.
-echo 输出目录: runs\test_run
-echo 查看报告: runs\test_run\report.md
-echo.
+echo ============================================================
+echo 测试完成
+echo ============================================================
 pause

@@ -1,14 +1,22 @@
 # Genos 多智能体基因组分析系统
 
-基于本地部署 Genos 服务的端到端变异解读系统，采用 **Planner-Executor-Critic** 多智能体架构。
+基于**华大基因官方 DCS 云 API** 的端到端变异解读系统，采用 **Planner-Executor-Critic** 多智能体架构。
 
 ## ⚡ 一键运行
 
 ```powershell
+# 1. 设置 API Token (必需)
+$env:GENOS_API_TOKEN="your_dcs_api_token"
+
+# 2. 运行测试
 .\run_fixed_test.bat
 ```
 
-该脚本会自动清理缓存、运行分析流程并显示报告。详细配置说明请查看 [环境配置指南.md](环境配置指南.md)
+该脚本会自动清理缓存、运行分析流程并显示报告。
+
+**重要**: 本项目使用**华大基因官方 DCS 云 API** (https://cloud.stomics.tech)。详细配置请查看:
+- 📘 [DCS_API配置指南.md](DCS_API配置指南.md) - **DCS API 配置教程** ⭐
+- 🔧 [环境配置指南.md](环境配置指南.md) - 环境故障排除
 
 ## 🖥️ 启动 Web 界面 (New!)
 
@@ -34,36 +42,37 @@ pip install -r requirements.txt
 
 **注意**: `pysam` 和 `pybigwig` 在 Windows 上需要编译环境，如果安装失败系统会使用模拟数据。
 
-### 2. 配置 Genos 服务
+### 2. 配置 Genos DCS API
 
-本系统采用 **Server-Client** 架构：
-*   **服务端**: 部署在高性能计算节点 (`172.16.227.27`)，运行 **Genos-10B** (百亿参数级生物大模型)。
-*   **客户端**: 本地运行 Agentic Pipeline，通过 HTTP 请求调用远程算力。
+本系统使用**华大基因官方 DCS 云 API**，无需本地部署模型：
 
-默认配置 (`configs/run.yaml`):
+**步骤 1**: 获取 API Token
+1. 访问 [https://cloud.stomics.tech](https://cloud.stomics.tech)
+2. 注册/登录账号
+3. 创建 API Token
+
+**步骤 2**: 设置环境变量
+
+```powershell
+# Windows PowerShell
+$env:GENOS_API_TOKEN="your_token_here"
+
+# 或永久设置
+[System.Environment]::SetEnvironmentVariable("GENOS_API_TOKEN", "your_token", "User")
+```
+
+**步骤 3**: 配置模型
+
+编辑 `configs/run.yaml`:
 ```yaml
 genos:
-  server_url: "http://172.16.227.27:8010"
-  model_name: "10B"
+  api_token: null  # 从环境变量读取
+  model_name: "Genos-1.2B"  # 或 "Genos-10B"
+  pooling: "mean"
+  mock_mode: false  # 使用真实 API
 ```
 
-这种架构使得用户可以在普通笔记本上运行复杂的基因组分析，将计算负载卸载到远程服务器。
-
-```bash
-cd ..\genos-server
-python genos_server.py --model_path_prefix "E:\path\to\models\BGI-HangzhouAI\"
-```
-
-如需修改，编辑 `configs/run.yaml` 或设置环境变量 `GENOS_SERVER_URL`:
-
-```python
-def create_client(
-    server_url: str = "http://your-server:port",  # 或使用 GENOS_SERVER_URL
-    model_name: str = "1.2B",
-    timeout: int = 60
-) -> GenosClient:
-    return GenosClient(server_url=server_url, model_name=model_name, timeout=timeout)
-```
+详细配置说明请查看 [DCS_API配置指南.md](DCS_API配置指南.md)
 
 ### 3. 运行分析
 

@@ -43,6 +43,9 @@ data/reference/*.fa.fai
 data/knowledge/*.tsv
 data/knowledge/*.jsonl
 data/knowledge/papers/
+data/knowledge/raw/
+data/knowledge/*.db
+data/knowledge/*.db-journal
 
 # 临时文件
 *.tmp
@@ -57,3 +60,5 @@ Thumbs.db
 *.parquet
 *.vcf.gz
 *.vcf.gz.tbi
+
+nul

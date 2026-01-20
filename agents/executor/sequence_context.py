@@ -107,7 +107,9 @@ class SequenceContextAgent:
             fasta_path=fasta_path,
             chrom=chrom,
             pos=pos,
-            window_size=self.window_size
+            window_size=self.window_size,
+            ref=ref,
+            alt=alt
         )
 
         # 构建变异序列（简单替换中心位置）
@@ -128,6 +130,7 @@ class SequenceContextAgent:
             "pos": pos,
             "ref": ref,
             "alt": alt,
+            "info": variant.get("info", ""),
             "ref_sequence": ref_sequence,
             "alt_sequence": alt_sequence,
             "window_size": self.window_size

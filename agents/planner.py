@@ -127,7 +127,8 @@ class PlannerAgent:
                     "agent": "ScoringAgent",
                     "depends_on": ["genos_embedding"],
                     "input": {
-                        "embeddings_file": "${output.genos_embedding.embeddings_file}"
+                        "embeddings_file": "${output.genos_embedding.embeddings_file}",
+                        "contexts_file": "${output.sequence_context.contexts_file}"  # 添加 contexts 以提取基因信息
                     },
                     "output": {
                         "scores_file": str(output_path / "scores.tsv")

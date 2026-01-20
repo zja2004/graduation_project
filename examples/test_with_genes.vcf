@@ -1,0 +1,20 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=GENE,Number=1,Type=String,Description="Gene Symbol">
+##INFO=<ID=CSQ,Number=.,Type=String,Description="Consequence annotations: Gene|Consequence">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE
+chr7	140753336	rs113488022	A	T	95.0	PASS	AF=0.0001;GENE=BRAF;CSQ=BRAF|missense_variant	GT:DP:GQ	0/1:50:95
+chr17	7676154	rs121913343	C	T	90.0	PASS	AF=0.0002;GENE=TP53;CSQ=TP53|missense_variant	GT:DP:GQ	0/1:48:90
+chr9	5073770	rs121913529	G	A	88.0	PASS	AF=0.00001;GENE=JAK2;CSQ=JAK2|missense_variant	GT:DP:GQ	1/1:45:88
+chr13	32379466	rs80357906	G	A	92.0	PASS	AF=0.0005;GENE=BRCA2;CSQ=BRCA2|stop_gained	GT:DP:GQ	0/1:52:92
+chr17	41244000	rs80357713	C	T	85.0	PASS	AF=0.0003;GENE=BRCA1;CSQ=BRCA1|frameshift_variant	GT:DP:GQ	0/1:42:85
+chr12	25245347	rs121913530	G	T	78.0	PASS	AF=0.0008;GENE=KRAS;CSQ=KRAS|missense_variant	GT:DP:GQ	0/1:38:78
+chr15	66729181	rs104894090	C	T	82.0	PASS	AF=0.0002;GENE=MAP2K1;CSQ=MAP2K1|missense_variant	GT:DP:GQ	0/1:40:82
+chr3	178936091	rs104886003	G	A	75.0	PASS	AF=0.0015;GENE=PIK3CA;CSQ=PIK3CA|missense_variant	GT:DP:GQ	0/1:35:75

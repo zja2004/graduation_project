@@ -51,6 +51,7 @@ class ScoringAgent:
         try:
             embeddings_file = task["input"]["embeddings_file"]
             output_file = task["output"]["scores_file"]
+            contexts_file = task["input"].get("contexts_file")  # 新增：获取contexts文件
 
             logger.info(f"→ 开始变异效应评分: {embeddings_file}")
 
@@ -59,6 +60,20 @@ class ScoringAgent:
             # 这里 embeddings 文件包含了 metadata (chr, pos, ref, alt)
             embeddings_df = pd.read_parquet(embeddings_file)
             logger.info(f"  加载 {len(embeddings_df)} 个变异记录")
+
+            # 新增：读取 contexts 文件以获取基因信息
+            gene_info = {}
+            if contexts_file and Path(contexts_file).exists():
+                import json
+                with open(contexts_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if line.strip():
+                            ctx = json.loads(line)
+                            info = ctx.get('info', '')
+                            gene = self._extract_gene_from_info(info)
+                            if gene:
+                                gene_info[str(ctx.get('variant_id'))] = gene
+                logger.info(f"  提取基因信息: {len(gene_info)} 个变异")
 
             # 计算评分
             scores = []
@@ -81,6 +96,12 @@ class ScoringAgent:
                     score = self._score_with_deepseek(row)
                 else:
                     score = self._calculate_score(row)
+                # 新增：添加基因信息到评分结果
+                variant_id = row.get("variant_id")
+                if variant_id is not None:
+                    gene = gene_info.get(str(variant_id))
+                    if gene:
+                        score["gene"] = gene
                 scores.append(score)
 
             # 保存结果
@@ -166,6 +187,25 @@ class ScoringAgent:
         except Exception as e:
             logger.warning(f"DeepSeek 评分失败 ({variant_desc}): {e}")
             return fallback_score
+
+    def _extract_gene_from_info(self, info: str) -> str:
+        """从 INFO 字段提取基因名称"""
+        if not info:
+            return ""
+
+        if not isinstance(info, str):
+            info = str(info)
+
+        for item in info.split(';'):
+            if item.startswith("GENE="):
+                value = item.split("=", 1)[1].strip()
+                return value.split(",")[0].split("|")[0]
+            if item.startswith("GENEINFO="):
+                value = item.split("=", 1)[1].strip()
+                first = value.split("|")[0]
+                return first.split(":")[0]
+
+        return ""
 
     def _calculate_score(self, row: pd.Series) -> Dict:
         """计算单个变异的综合评分 (Genos Embedding 方法)"""

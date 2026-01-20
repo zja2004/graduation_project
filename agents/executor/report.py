@@ -212,6 +212,7 @@ class ReportAgent:
             padding: 20px;
             margin-bottom: 15px;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             transition: transform 0.2s;
@@ -241,6 +242,42 @@ class ReportAgent:
         .badge.high {{ background-color: var(--danger-color); }}
         .badge.moderate {{ background-color: var(--warning-color); color: #333; }}
         .badge.low {{ background-color: var(--success-color); }}
+
+        .variant-details {{
+            width: 100%;
+            margin-top: 10px;
+        }}
+
+        .evidence-box {{
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #f7fbff;
+            border: 1px solid #e3effb;
+            border-radius: 8px;
+        }}
+
+        .evidence-box h4 {{
+            margin: 0 0 6px 0;
+            font-size: 0.95em;
+            color: #2c3e50;
+        }}
+
+        .evidence-list {{
+            margin: 6px 0 0 18px;
+            padding: 0;
+            color: #444;
+            font-size: 0.9em;
+        }}
+
+        .explanation-box {{
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #fff8e8;
+            border: 1px solid #ffe3b3;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #5a4a2c;
+        }}
         
         /* 建议部分 */
         .recommendation-list li {{
@@ -329,10 +366,10 @@ class ReportAgent:
     def _generate_html_variants_list(self, scores_df: pd.DataFrame, evidence_data: Dict) -> str:
         """生成 HTML 变异列表"""
         html_items = []
-        
+
         # 取 Top N
         top_variants = scores_df.nlargest(self.max_variants, "final_score")
-        
+
         for _, variant in top_variants.iterrows():
             vid = variant["variant_id"]
             chrom = variant["chrom"]
@@ -341,23 +378,60 @@ class ReportAgent:
             alt = variant["alt"]
             score = variant["final_score"]
             impact = variant["impact_level"]
-            
+            gene = variant.get("gene", "")
+
             # 格式化
             impact_class = "high" if impact == "HIGH" else ("moderate" if impact == "MODERATE" else "low")
             impact_text = "高风险" if impact == "HIGH" else ("中等风险" if impact == "MODERATE" else "低风险")
-            
+
             # 获取证据
-            evidence = evidence_data.get(vid, {})
+            evidence_key = str(vid)
+            evidence = evidence_data.get(evidence_key, evidence_data.get(vid, {}))
             sources = evidence.get("sources", [])
             source_names = [s["source"] for s in sources if s["source"] != "Prediction"]
             evidence_tag = f"<br><small>📚 证据来源: {', '.join(source_names)}</small>" if source_names else ""
-            
+
+            gene_label = f" | 基因: <strong>{gene}</strong>" if isinstance(gene, str) and gene else ""
+
+            # 【新增】获取AI通俗化解释
+            gene_explanation = evidence.get("gene_explanation")
+            explanation_html = ""
+
+            if gene_explanation:
+                explanation_html = f"""
+                <div style="margin-top: 15px; padding: 20px; background: linear-gradient(135deg, #f0f8ff 0%, #e6f2ff 100%); border-left: 5px solid #3498db; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 1.3em; margin-right: 8px;">🤖</span>
+                        <h4 style="margin: 0; color: #2c3e50; font-size: 1.1em;">AI 通俗化解释</h4>
+                    </div>
+                    <div style="white-space: pre-line; line-height: 1.9; color: #34495e; font-size: 0.95em;">
+                        {gene_explanation}
+                    </div>
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; font-size: 0.85em; color: #7f8c8d; font-style: italic;">
+                        💡 此解释由 DeepSeek AI 自动生成，仅供参考理解，不作为临床诊断依据
+                    </div>
+                </div>
+                """
+
+            # 评分解释（LLM 输出）
+            llm_explanation = variant.get("explanation", "")
+            llm_explanation_html = ""
+            if isinstance(llm_explanation, str) and llm_explanation.strip():
+                llm_explanation_html = f"""
+                <div class="explanation-box">
+                    <strong>评分解释:</strong> {llm_explanation}
+                </div>
+                """
+
+            # 证据详情（RAG）
+            evidence_detail_html = self._generate_html_evidence_detail(evidence)
+
             item_html = f"""
-            <div class="variant-item {impact_class}-impact">
+            <div class="variant-item {impact_class}-impact" style="margin-bottom: 25px;">
                 <div class="variant-info">
                     <h3>{vid} <span style="font-weight:normal; font-size:0.8em; color:#888;">({chrom}:{pos})</span></h3>
                     <div class="variant-meta">
-                        基因变化: <strong>{ref}</strong> &rarr; <strong>{alt}</strong>
+                        基因变化: <strong>{ref}</strong> &rarr; <strong>{alt}</strong>{gene_label}
                         {evidence_tag}
                     </div>
                 </div>
@@ -365,11 +439,72 @@ class ReportAgent:
                     <span class="badge {impact_class}">{impact_text}</span>
                     <div style="font-size: 0.8em; color: #666; margin-top: 5px;">AI 评分: {score:.2f}</div>
                 </div>
+
+                <div class="variant-details">
+                    {llm_explanation_html}
+                    {evidence_detail_html}
+                    {explanation_html}
+                </div>
             </div>
             """
             html_items.append(item_html)
-            
+
         return "\n".join(html_items)
+
+    def _generate_html_evidence_detail(self, evidence: Dict) -> str:
+        """生成 HTML 证据详情"""
+        if not evidence:
+            return ""
+
+        sources = evidence.get("sources", [])
+        if not sources:
+            return ""
+
+        items = []
+        for source in sources:
+            name = source.get("source", "")
+            data = source.get("data", {}) or {}
+
+            if name == "ClinVar":
+                if data.get("found"):
+                    sig = data.get("clinical_significance") or data.get("significance") or "N/A"
+                    disease = data.get("disease_name") or "N/A"
+                    items.append(f"ClinVar: {sig}; {disease}")
+                else:
+                    msg = data.get("message", "Not found")
+                    items.append(f"ClinVar: {msg}")
+            elif name == "gnomAD":
+                if data.get("found"):
+                    af = data.get("allele_frequency", 0.0)
+                    items.append(f"gnomAD: AF={af:.6g}")
+                else:
+                    items.append("gnomAD: Not found")
+            elif name == "OMIM":
+                if data.get("found"):
+                    diseases = data.get("diseases", [])
+                    disease_text = ", ".join(diseases) if diseases else "No disease link"
+                    items.append(f"OMIM: {disease_text}")
+                else:
+                    items.append("OMIM: Not found")
+            elif name == "Prediction":
+                score = data.get("final_score", "")
+                impact = data.get("impact_level", "")
+                items.append(f"Prediction: score={score}, impact={impact}")
+            else:
+                items.append(f"{name}: {data}")
+
+        if not items:
+            return ""
+
+        evidence_items = "\n".join(f"<li>{item}</li>" for item in items)
+        return f"""
+        <div class="evidence-box">
+            <h4>RAG 证据汇总</h4>
+            <ul class="evidence-list">
+                {evidence_items}
+            </ul>
+        </div>
+        """
 
     def _generate_html_recommendations(self, high_count: int, moderate_count: int) -> str:
         """生成 HTML 格式建议"""
@@ -418,7 +553,8 @@ class ReportAgent:
             alt = variant["alt"]
             score = variant["final_score"]
             impact = variant["impact_level"]
-            evidence = evidence_data.get(vid, {})
+            evidence_key = str(vid)
+            evidence = evidence_data.get(evidence_key, evidence_data.get(vid, {}))
             sources = evidence.get("sources", [])
             source_names = ", ".join([s["source"] for s in sources[:3]])
             lines.append(f"| {idx} | {vid} | {chrom}:{pos} | {ref}→{alt} | {score:.3f} | {impact} | {source_names} |")

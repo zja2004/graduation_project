@@ -1,17 +1,19 @@
 # Genos 多智能体基因组分析系统 - 运行配置
 
-# ============ Genos API 配置 ============
+# ============ Genos DCS API 配置 ============
 genos:
-  # 本地 Genos 服务地址
-  server_url: "http://172.16.227.27:8010"
-
-  # API Token (或从环境变量 GENOS_API_TOKEN 读取)
+  # DCS API Token (从环境变量 GENOS_API_TOKEN 读取)
+  # 设置方法:
+  #   Windows: set GENOS_API_TOKEN=your_token_here
+  #   Linux/Mac: export GENOS_API_TOKEN=your_token_here
   api_token: null  # 留空则从环境变量读取
 
   # 模型配置
-  model_name: "10B"  # 使用远程部署的 10B 模型
+  model_name: "Genos-10B"  # Genos-1.2B 或 Genos-10B
   pooling: "mean"  # mean/max/last/none
   timeout: 60
+
+  # 模拟模式 (如果为 true，则不调用真实 API，使用随机数据)
   mock_mode: false
 
 # ============ DeepSeek API 配置 ============
@@ -22,7 +24,7 @@ deepseek:
 
 # ============ 参考数据配置 ============
 reference:
-  fasta: "data/reference/hg38.fa"  # 参考基因组
+  fasta: "../hg38.fa"  # 参考基因组
   # fasta: "data/reference/hg19.fa"  # 或使用 hg19
 
 # ============ 知识库配置 ============
@@ -33,22 +35,17 @@ knowledge:
   gene_info: "data/knowledge/gene_info.tsv"
   papers_dir: "data/knowledge/papers/"
 
+  # Mode: "local" (default) or "hybrid" (uses remote API if local DB missing)
+  mode: "hybrid"
+  remote_timeout: 5
+
 # ============ 变异过滤参数 ============
 variant_filter:
-  min_quality: 30  # 最小质量分数
-  max_population_freq: 0.01  # 最大人群频率（1%）
+  min_quality: 0  # 最小质量分数
+  max_population_freq: 1.0  # 最大人群频率（100%）
 
   # 保留的变异类型
-  consequence_types:
-    - "stop_gained"
-    - "frameshift_variant"
-    - "splice_acceptor_variant"
-    - "splice_donor_variant"
-    - "start_lost"
-    - "stop_lost"
-    - "missense_variant"
-    - "inframe_insertion"
-    - "inframe_deletion"
+  consequence_types: []
 
   # 排除的区域
   exclude_regions:
