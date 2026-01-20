@@ -23,7 +23,12 @@ logger = logging.getLogger(__name__)
 
 # 数据下载目录
 DATA_DIR = Path("data/knowledge/raw")
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+def set_download_dir(path: str):
+    global DATA_DIR
+    DATA_DIR = Path(path)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
 
 # 数据源配置
 DATA_SOURCES = {
@@ -285,8 +290,21 @@ if __name__ == "__main__":
         action="store_true",
         help="生产模式（下载所有文件，包括大文件）"
     )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="指定下载目录 (默认: data/knowledge/raw)"
+    )
 
     args = parser.parse_args()
+    
+    # 设置下载目录
+    if args.output_dir:
+        set_download_dir(args.output_dir)
+    else:
+        # Default mkdir behavior if no arg provided
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     # 安装依赖（已经在虚拟环境中安装）
     try:
